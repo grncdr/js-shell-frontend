@@ -1,16 +1,12 @@
 var parser = require('./frontend')()
 var from = require('from')
 
-prompt('$ ')
-
 process.stdin.pipe(parser)
   .on('data', function (commands) {
     console.log(JSON.stringify(commands, null, 2))
-    prompt('$ ')
   })
-  .on('continue', function () {
-    prompt('> ')
-  })
+  .on('start',    function () { prompt('$ ') })
+  .on('continue', function () { prompt('> ') })
   .on('parse-error', reportParseError)
 
 function reportParseError (err, line) {
@@ -21,7 +17,6 @@ function reportParseError (err, line) {
   for (var i = 0; i < (err.column - start); i++) arrow += '-';
   arrow += '^'
   console.error(arrow)
-  prompt('$ ')
 }
 
 function prompt (p) {

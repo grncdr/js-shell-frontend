@@ -14,6 +14,7 @@ function createStreamingParser () {
                                 errIfUnparsed))
 
   stream.parse = parse
+  process.nextTick(reset)
   return stream
 
   function parseLine (line, _, cb) {
@@ -22,14 +23,16 @@ function createStreamingParser () {
     try {
       var commands = parse(input)
       stream.emit('input', input)
-      input = ""
-      this.push(commands)
+      for (var i = 0, len = commands.length; i < len; i++) {
+        this.push(commands[i])
+      }
+      reset()
     } catch (err) {
       if (isContinuation(err, input)) {
         stream.emit('continue')
       } else {
         stream.emit('parse-error', err, input)
-        input = ""
+        reset()
       }
     }
     cb()
@@ -38,6 +41,11 @@ function createStreamingParser () {
   function errIfUnparsed (cb) {
     debugger
     cb(input ? new Error("Unparsed input: " + input) : null)
+  }
+
+  function reset () {
+    input = ""
+    stream.emit('start')
   }
 }
 
